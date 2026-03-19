@@ -1,8 +1,30 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import type { Card, KanbanList, TimeBlock, TimeFilterRange, GridInterval } from '@/types'
 import { DEFAULT_LISTS, LIST_COLORS } from '@/lib/constants'
+
+// File-based storage via Electron IPC (synchronous read, async write)
+const storeAPI = (window as unknown as { store?: { get: () => string | null; set: (data: string) => void } }).store
+
+const fileStorage: StateStorage = {
+  getItem: (name: string): string | null => {
+    if (storeAPI) {
+      return storeAPI.get()
+    }
+    return localStorage.getItem(name)
+  },
+  setItem: (name: string, value: string): void => {
+    if (storeAPI) {
+      storeAPI.set(value)
+    } else {
+      localStorage.setItem(name, value)
+    }
+  },
+  removeItem: (name: string): void => {
+    localStorage.removeItem(name)
+  },
+}
 
 export interface AppState {
   // Data
@@ -210,6 +232,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'kanban-calendar-storage',
       version: 1,
+      storage: createJSONStorage(() => fileStorage),
     }
   )
 )

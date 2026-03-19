@@ -1,10 +1,10 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-  } catch (error) {
-    console.error(error)
-  }
+const storeAPI = {
+  // Synchronous read — blocks until data is returned, no race condition
+  get: (): string | null => ipcRenderer.sendSync('store:get-sync'),
+  // Async write — fire and forget on state changes
+  set: (data: string): void => { ipcRenderer.invoke('store:set', data) },
 }
+
+contextBridge.exposeInMainWorld('store', storeAPI)

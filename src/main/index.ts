@@ -1,7 +1,37 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
-import { is } from '@electron-toolkit/utils'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 
+// --- File-based storage ---
+const userDataPath = app.getPath('userData')
+const storagePath = join(userDataPath, 'store.json')
+
+function ensureDir(): void {
+  if (!existsSync(userDataPath)) {
+    mkdirSync(userDataPath, { recursive: true })
+  }
+}
+
+// Synchronous read — used by renderer to hydrate store before first render
+ipcMain.on('store:get-sync', (event) => {
+  try {
+    if (existsSync(storagePath)) {
+      event.returnValue = readFileSync(storagePath, 'utf-8')
+      return
+    }
+  } catch {
+    // first launch or corrupt file
+  }
+  event.returnValue = null
+})
+
+// Async write — used on every state change
+ipcMain.handle('store:set', (_event, data: string) => {
+  ensureDir()
+  writeFileSync(storagePath, data, 'utf-8')
+})
+
+// --- Window ---
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1400,
@@ -26,7 +56,7 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
