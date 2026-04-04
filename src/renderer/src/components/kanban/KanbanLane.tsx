@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useAppStore } from '@/store'
 import { KanbanCard } from './KanbanCard'
+import { GhostCard } from './GhostCard'
 import { LIST_COLORS } from '@/lib/constants'
 import type { Card, KanbanList } from '@/types'
 
@@ -19,8 +20,6 @@ export function KanbanLane({ list, cards, isOverlay }: Props) {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(list.title)
-  const [addingCard, setAddingCard] = useState(false)
-  const [newCardTitle, setNewCardTitle] = useState('')
   const [showMenu, setShowMenu] = useState(false)
 
   const { setNodeRef, isOver } = useDroppable({ id: list.id })
@@ -30,14 +29,6 @@ export function KanbanLane({ list, cards, isOverlay }: Props) {
       updateList(list.id, { title: editTitle.trim() })
     }
     setIsEditing(false)
-  }
-
-  function handleAddCard() {
-    if (newCardTitle.trim()) {
-      addCard(list.id, newCardTitle.trim())
-      setNewCardTitle('')
-      setAddingCard(false)
-    }
   }
 
   return (
@@ -166,48 +157,7 @@ export function KanbanLane({ list, cards, isOverlay }: Props) {
 
       {/* Add card */}
       <div className="shrink-0 px-3 pb-3 pt-1">
-        {addingCard ? (
-          <div className="bg-[var(--color-bg)] rounded-xl p-3">
-            <input
-              autoFocus
-              value={newCardTitle}
-              onChange={(e) => setNewCardTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddCard()
-                if (e.key === 'Escape') {
-                  setAddingCard(false)
-                  setNewCardTitle('')
-                }
-              }}
-              placeholder="Card title..."
-              className="w-full bg-transparent text-sm text-[var(--color-text)] outline-none"
-            />
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={handleAddCard}
-                className="px-4 py-1.5 text-xs bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)]"
-              >
-                Add Card
-              </button>
-              <button
-                onClick={() => {
-                  setAddingCard(false)
-                  setNewCardTitle('')
-                }}
-                className="px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setAddingCard(true)}
-            className="w-full py-2.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] bg-[var(--color-bg)]/50 hover:bg-[var(--color-bg)] rounded-xl border border-dashed border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors"
-          >
-            + Add Card
-          </button>
-        )}
+        <GhostCard onAdd={(title) => addCard(list.id, title)} />
       </div>
     </div>
   )
