@@ -4,7 +4,9 @@ export type TimeFilterRange = 'today' | 'this-week' | 'next-week'
 
 export type GridInterval = 15 | 30
 
-export interface Category {
+export type ActionType = 'Work' | 'Follow up'
+
+export interface Person {
   id: string
   name: string
   color: string // hex
@@ -27,7 +29,8 @@ export interface Card {
 
   startDate: string | null // ISO 8601
   durationMinutes: number | null
-  categoryId: string | null
+  personId: string | null
+  actionType: ActionType
 
   allowedDays: DayOfWeek[]
   timeBlockIds: string[]
