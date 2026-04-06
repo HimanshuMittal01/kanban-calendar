@@ -18,6 +18,17 @@ export const TIME_BLOCK_COLORS = [
   '#ec4899', // pink
 ]
 
+export const CATEGORY_COLORS = [
+  '#4f8ff7', // blue
+  '#f7794f', // orange
+  '#4fc76f', // green
+  '#c74f9b', // pink
+  '#f7c94f', // yellow
+  '#9b4fc7', // purple
+  '#4fc7c7', // teal
+  '#f74f4f', // red
+]
+
 export const DEFAULT_LISTS = [
   { title: 'To Do', color: LIST_COLORS[0] },
   { title: 'In Progress', color: LIST_COLORS[1] },
