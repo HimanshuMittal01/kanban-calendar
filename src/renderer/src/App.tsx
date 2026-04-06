@@ -5,15 +5,16 @@ import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { CalendarGrid } from '@/components/calendar/CalendarGrid'
 import { CardDetailModal } from '@/components/kanban/CardDetailModal'
 import { TimeBlockManager } from '@/components/schedule/TimeBlockManager'
-import { CategoryManager } from '@/components/schedule/CategoryManager'
+import { PeopleManager } from '@/components/schedule/PeopleManager'
 import { useState } from 'react'
+import pkg from '../../../package.json'
 
 export default function App() {
   const activeFilter = useAppStore((s) => s.activeFilter)
   const selectedCardId = useAppStore((s) => s.selectedCardId)
   const setSelectedCard = useAppStore((s) => s.setSelectedCard)
   const [showTimeBlocks, setShowTimeBlocks] = useState(false)
-  const [showCategories, setShowCategories] = useState(false)
+  const [showPeople, setShowPeople] = useState(false)
 
   return (
     <div className="flex flex-col h-screen bg-[var(--color-bg)]">
@@ -23,12 +24,12 @@ export default function App() {
         style={{ height: 52, paddingLeft: 80, paddingRight: 20 }}
       >
         <span className="no-drag text-sm font-semibold text-[var(--color-text)] shrink-0">
-          Kanban Calendar
+          Kanban Calendar <span className="font-normal text-[var(--color-text-muted)]">v{pkg.version}</span>
         </span>
         <div className="flex-1" />
         <Toolbar
           onOpenTimeBlocks={() => setShowTimeBlocks(true)}
-          onOpenCategories={() => setShowCategories(true)}
+          onOpenPeople={() => setShowPeople(true)}
         />
       </div>
 
@@ -59,8 +60,8 @@ export default function App() {
         <TimeBlockManager onClose={() => setShowTimeBlocks(false)} />
       )}
 
-      {showCategories && (
-        <CategoryManager onClose={() => setShowCategories(false)} />
+      {showPeople && (
+        <PeopleManager onClose={() => setShowPeople(false)} />
       )}
     </div>
   )
