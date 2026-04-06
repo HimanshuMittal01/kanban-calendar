@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
-import type { Card, KanbanList, TimeBlock, TimeFilterRange, GridInterval } from '@/types'
+import type { Card, Category, KanbanList, TimeBlock, TimeFilterRange, GridInterval } from '@/types'
 import { DEFAULT_LISTS, LIST_COLORS } from '@/lib/constants'
 
 // File-based storage via Electron IPC (synchronous read, async write)
@@ -31,6 +31,7 @@ export interface AppState {
   lists: KanbanList[]
   cards: Card[]
   timeBlocks: TimeBlock[]
+  categories: Category[]
 
   // UI State
   activeFilter: TimeFilterRange | null
@@ -48,6 +49,11 @@ export interface AppState {
   updateCard: (id: string, updates: Partial<Card>) => void
   deleteCard: (id: string) => void
   moveCard: (cardId: string, toListId: string, newIndex: number) => void
+
+  // Category CRUD
+  addCategory: (name: string, color: string) => void
+  updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void
+  deleteCategory: (id: string) => void
 
   // Time Block CRUD
   addTimeBlock: (block: Omit<TimeBlock, 'id'>) => void
@@ -76,6 +82,7 @@ export const useAppStore = create<AppState>()(
       lists: createDefaultLists(),
       cards: [],
       timeBlocks: [],
+      categories: [],
 
       // UI state
       activeFilter: null,
@@ -128,7 +135,7 @@ export const useAppStore = create<AppState>()(
           listId,
           startDate: null,
           durationMinutes: 60,
-          priority: 'medium',
+          categoryId: null,
           allowedDays: [],
           timeBlockIds: [],
           createdAt: now,
@@ -166,13 +173,11 @@ export const useAppStore = create<AppState>()(
         const card = cards.find((c) => c.id === cardId)
         if (!card) return
 
-        // Remove from old list and fix sort orders
         const oldListCards = cards
           .filter((c) => c.listId === card.listId && c.id !== cardId)
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .map((c, i) => ({ ...c, sortOrder: i }))
 
-        // If moving within same list
         if (card.listId === toListId) {
           oldListCards.splice(newIndex, 0, {
             ...card,
@@ -183,7 +188,6 @@ export const useAppStore = create<AppState>()(
           const otherCards = cards.filter((c) => c.listId !== card.listId)
           set({ cards: [...otherCards, ...reindexed] })
         } else {
-          // Insert into new list
           const newListCards = cards
             .filter((c) => c.listId === toListId)
             .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -201,6 +205,27 @@ export const useAppStore = create<AppState>()(
         }
       },
 
+      // Category CRUD
+      addCategory: (name, color) => {
+        const newCategory: Category = { id: nanoid(), name, color }
+        set({ categories: [...get().categories, newCategory] })
+      },
+
+      updateCategory: (id, updates) => {
+        set({
+          categories: get().categories.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+        })
+      },
+
+      deleteCategory: (id) => {
+        set({
+          categories: get().categories.filter((c) => c.id !== id),
+          cards: get().cards.map((c) =>
+            c.categoryId === id ? { ...c, categoryId: null } : c
+          ),
+        })
+      },
+
       // Time Block CRUD
       addTimeBlock: (block) => {
         const newBlock: TimeBlock = { ...block, id: nanoid() }
@@ -216,7 +241,6 @@ export const useAppStore = create<AppState>()(
       deleteTimeBlock: (id) => {
         set({
           timeBlocks: get().timeBlocks.filter((b) => b.id !== id),
-          // Remove references from cards
           cards: get().cards.map((c) => ({
             ...c,
             timeBlockIds: c.timeBlockIds.filter((tbId) => tbId !== id),
@@ -231,8 +255,21 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'kanban-calendar-storage',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => fileStorage),
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Record<string, unknown>
+        if (version === 1) {
+          return {
+            ...state,
+            categories: [],
+            cards: ((state.cards ?? []) as Record<string, unknown>[]).map(
+              ({ priority: _priority, ...rest }) => ({ ...rest, categoryId: null })
+            ),
+          }
+        }
+        return state
+      },
     }
   )
 )
