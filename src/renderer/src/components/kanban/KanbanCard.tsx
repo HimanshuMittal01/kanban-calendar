@@ -12,9 +12,9 @@ interface Props {
 export function KanbanCard({ card, isOverlay }: Props) {
   const setSelectedCard = useAppStore((s) => s.setSelectedCard)
   const lists = useAppStore((s) => s.lists)
-  const categories = useAppStore((s) => s.categories)
+  const people = useAppStore((s) => s.people)
   const list = lists.find((l) => l.id === card.listId)
-  const category = card.categoryId ? categories.find((c) => c.id === card.categoryId) : null
+  const person = card.personId ? people.find((p) => p.id === card.personId) : null
 
   const {
     attributes,
@@ -80,6 +80,28 @@ export function KanbanCard({ card, isOverlay }: Props) {
 
         {/* Primary metadata row */}
         <div className="flex items-center flex-wrap" style={{ gap: 6, marginTop: 8 }}>
+          {/* Action type badge — always shown */}
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '2px 7px',
+              borderRadius: 4,
+              letterSpacing: 0.2,
+              ...(card.actionType === 'Follow up'
+                ? {
+                    color: 'var(--color-accent)',
+                    backgroundColor: 'rgba(99,102,241,0.12)',
+                  }
+                : {
+                    color: 'var(--color-text-muted)',
+                    backgroundColor: 'rgba(255,255,255,0.06)',
+                  }),
+            }}
+          >
+            {card.actionType}
+          </span>
+
           {/* Duration pill */}
           {card.durationMinutes !== null && (
             <span
@@ -112,20 +134,20 @@ export function KanbanCard({ card, isOverlay }: Props) {
             </span>
           )}
 
-          {/* Category tag */}
-          {category && (
+          {/* Person tag — only for Follow up cards */}
+          {card.actionType === 'Follow up' && person && (
             <span
               style={{
                 fontSize: 10,
                 fontWeight: 600,
-                color: category.color,
-                backgroundColor: category.color + '1f',
+                color: person.color,
+                backgroundColor: person.color + '1f',
                 padding: '2px 7px',
                 borderRadius: 4,
                 letterSpacing: 0.2,
               }}
             >
-              {category.name}
+              {person.name}
             </span>
           )}
         </div>
