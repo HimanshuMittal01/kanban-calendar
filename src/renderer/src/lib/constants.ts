@@ -18,7 +18,7 @@ export const TIME_BLOCK_COLORS = [
   '#ec4899', // pink
 ]
 
-export const CATEGORY_COLORS = [
+export const PERSON_COLORS = [
   '#4f8ff7', // blue
   '#f7794f', // orange
   '#4fc76f', // green
