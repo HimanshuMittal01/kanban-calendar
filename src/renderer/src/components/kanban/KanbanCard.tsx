@@ -62,6 +62,23 @@ export function KanbanCard({ card, isOverlay }: Props) {
 
       {/* Card body */}
       <div style={{ padding: '10px 12px 10px 12px' }}>
+        {/* Follow up corner dot */}
+        {card.actionType === 'Follow up' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              backgroundColor: '#6366f1',
+              opacity: 0.85,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
         {/* Title row */}
         <div className="flex items-start justify-between" style={{ gap: 8 }}>
           <div
@@ -80,28 +97,6 @@ export function KanbanCard({ card, isOverlay }: Props) {
 
         {/* Primary metadata row */}
         <div className="flex items-center flex-wrap" style={{ gap: 6, marginTop: 8 }}>
-          {/* Action type badge — always shown */}
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              padding: '2px 7px',
-              borderRadius: 4,
-              letterSpacing: 0.2,
-              ...(card.actionType === 'Follow up'
-                ? {
-                    color: 'var(--color-accent)',
-                    backgroundColor: 'rgba(99,102,241,0.12)',
-                  }
-                : {
-                    color: 'var(--color-text-muted)',
-                    backgroundColor: 'rgba(255,255,255,0.06)',
-                  }),
-            }}
-          >
-            {card.actionType}
-          </span>
-
           {/* Duration pill */}
           {card.durationMinutes !== null && (
             <span
