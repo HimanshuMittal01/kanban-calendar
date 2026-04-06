@@ -16,7 +16,7 @@ export function isCardScheduleValid(card: Card, timeBlocks: TimeBlock[]): boolea
   // Check time block constraints
   if (card.timeBlockIds.length > 0) {
     const startMinutes = getHours(start) * 60 + getMinutes(start)
-    const endMinutes = startMinutes + card.durationMinutes
+    const endMinutes = startMinutes + (card.durationMinutes ?? 0)
 
     return card.timeBlockIds.some((blockId) => {
       const block = timeBlocks.find((b) => b.id === blockId)

@@ -36,7 +36,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState('')
-  const [durationMinutes, setDurationMinutes] = useState(60)
+  const [durationMinutes, setDurationMinutes] = useState<number | null>(null)
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [allowedDays, setAllowedDays] = useState<DayOfWeek[]>([])
   const [selectedTimeBlockIds, setSelectedTimeBlockIds] = useState<string[]>([])
@@ -46,7 +46,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
       setTitle(card.title)
       setDescription(card.description)
       setStartDate(card.startDate ? card.startDate.slice(0, 16) : '')
-      setDurationMinutes(card.durationMinutes)
+      setDurationMinutes(card.durationMinutes ?? null)
       setCategoryId(card.categoryId)
       setAllowedDays([...card.allowedDays])
       setSelectedTimeBlockIds([...card.timeBlockIds])
@@ -62,7 +62,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
       title: title.trim() || 'Untitled',
       description,
       startDate: startDate ? new Date(startDate).toISOString() : null,
-      durationMinutes: Math.max(5, durationMinutes),
+      durationMinutes: durationMinutes !== null ? Math.max(5, durationMinutes) : null,
       categoryId,
       allowedDays,
       timeBlockIds: selectedTimeBlockIds,
@@ -189,30 +189,13 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             </div>
             <div>
               <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
-                Duration ({formatDuration(durationMinutes)})
+                Duration {durationMinutes !== null && `(${formatDuration(durationMinutes)})`}
               </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={5}
-                  step={5}
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Math.max(5, parseInt(e.target.value) || 5))}
-                  className="w-full bg-[var(--color-bg)] text-[var(--color-text)] rounded-xl border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)] [color-scheme:dark]"
-                  style={{ fontSize: 13, padding: '8px 40px 8px 12px' }}
-                />
-                <span
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
-                  style={{ fontSize: 11 }}
-                >
-                  min
-                </span>
-              </div>
-              <div className="flex" style={{ gap: 4, marginTop: 6 }}>
+              <div className="flex" style={{ gap: 4 }}>
                 {DURATION_PRESETS.map((d) => (
                   <button
                     key={d.value}
-                    onClick={() => setDurationMinutes(d.value)}
+                    onClick={() => setDurationMinutes(durationMinutes === d.value ? null : d.value)}
                     className={`rounded-md transition-colors ${
                       durationMinutes === d.value
                         ? 'bg-[var(--color-accent)] text-white'
@@ -224,6 +207,32 @@ export function CardDetailModal({ cardId, onClose }: Props) {
                   </button>
                 ))}
               </div>
+              <div className="relative" style={{ marginTop: 6 }}>
+                <input
+                  type="number"
+                  min={5}
+                  step={5}
+                  value={durationMinutes ?? ''}
+                  placeholder="Custom (min)"
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value)
+                    setDurationMinutes(isNaN(v) ? null : Math.max(5, v))
+                  }}
+                  className="w-full bg-[var(--color-bg)] text-[var(--color-text)] rounded-xl border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)] [color-scheme:dark]"
+                  style={{ fontSize: 13, padding: '8px 40px 8px 12px' }}
+                />
+                <span
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
+                  style={{ fontSize: 11 }}
+                >
+                  min
+                </span>
+              </div>
+              {durationMinutes === null && (
+                <p className="text-[var(--color-text-muted)]" style={{ fontSize: 11, marginTop: 4 }}>
+                  No duration — card won't be auto-scheduled
+                </p>
+              )}
             </div>
           </div>
 

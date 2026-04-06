@@ -101,7 +101,7 @@ export function generateTimeSlots(interval: GridInterval, hoursStart: number, ho
 
 export function getCardGridPosition(
   startDate: string,
-  durationMinutes: number,
+  durationMinutes: number | null,
   dayColumnIndex: number,
   interval: GridInterval,
   hoursStart: number
@@ -109,7 +109,7 @@ export function getCardGridPosition(
   const date = parseISO(startDate)
   const minutesFromStart = (getHours(date) - hoursStart) * 60 + getMinutes(date)
   const startRow = Math.floor(minutesFromStart / interval) + 1
-  const spanRows = Math.max(1, Math.ceil(durationMinutes / interval))
+  const spanRows = durationMinutes ? Math.max(1, Math.ceil(durationMinutes / interval)) : 1
 
   return {
     gridColumn: dayColumnIndex + 2,

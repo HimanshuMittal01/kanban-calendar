@@ -81,18 +81,20 @@ export function KanbanCard({ card, isOverlay }: Props) {
         {/* Primary metadata row */}
         <div className="flex items-center flex-wrap" style={{ gap: 6, marginTop: 8 }}>
           {/* Duration pill */}
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: 'var(--color-text-secondary)',
-              backgroundColor: 'rgba(255,255,255,0.06)',
-              padding: '2px 8px',
-              borderRadius: 4,
-            }}
-          >
-            {formatDuration(card.durationMinutes)}
-          </span>
+          {card.durationMinutes !== null && (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: 'var(--color-text-secondary)',
+                backgroundColor: 'rgba(255,255,255,0.06)',
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              {formatDuration(card.durationMinutes)}
+            </span>
+          )}
 
           {/* Day constraints */}
           {dayAbbrevs && (

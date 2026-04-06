@@ -26,7 +26,7 @@ export interface Card {
   listId: string
 
   startDate: string | null // ISO 8601
-  durationMinutes: number
+  durationMinutes: number | null
   categoryId: string | null
 
   allowedDays: DayOfWeek[]

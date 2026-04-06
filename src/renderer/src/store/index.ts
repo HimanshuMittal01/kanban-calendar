@@ -134,7 +134,7 @@ export const useAppStore = create<AppState>()(
           description: '',
           listId,
           startDate: null,
-          durationMinutes: 60,
+          durationMinutes: null,
           categoryId: null,
           allowedDays: [],
           timeBlockIds: [],

@@ -176,7 +176,7 @@ export function CalendarGrid() {
 
             const pos = getCardGridPosition(
               card.startDate!,
-              card.durationMinutes,
+              card.durationMinutes ?? null,
               dayIndex,
               gridInterval,
               HOURS_START
