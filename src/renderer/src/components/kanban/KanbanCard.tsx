@@ -4,12 +4,6 @@ import { useAppStore } from '@/store'
 import { formatDuration, format, parseISO } from '@/lib/dateUtils'
 import type { Card } from '@/types'
 
-const PRIORITY_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  low: { label: 'Low', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  medium: { label: 'Med', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-  high: { label: 'High', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-}
-
 interface Props {
   card: Card
   isOverlay?: boolean
@@ -18,8 +12,9 @@ interface Props {
 export function KanbanCard({ card, isOverlay }: Props) {
   const setSelectedCard = useAppStore((s) => s.setSelectedCard)
   const lists = useAppStore((s) => s.lists)
+  const categories = useAppStore((s) => s.categories)
   const list = lists.find((l) => l.id === card.listId)
-  const pri = PRIORITY_LABELS[card.priority]
+  const category = card.categoryId ? categories.find((c) => c.id === card.categoryId) : null
 
   const {
     attributes,
@@ -67,7 +62,7 @@ export function KanbanCard({ card, isOverlay }: Props) {
 
       {/* Card body */}
       <div style={{ padding: '10px 12px 10px 12px' }}>
-        {/* Title row — title + chevron */}
+        {/* Title row */}
         <div className="flex items-start justify-between" style={{ gap: 8 }}>
           <div
             className="text-[var(--color-text)] font-medium"
@@ -75,7 +70,6 @@ export function KanbanCard({ card, isOverlay }: Props) {
           >
             {card.title}
           </div>
-          {/* Chevron affordance — visible on hover */}
           <span
             className="text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
             style={{ fontSize: 14, lineHeight: '18px' }}
@@ -84,7 +78,7 @@ export function KanbanCard({ card, isOverlay }: Props) {
           </span>
         </div>
 
-        {/* Primary metadata row — duration + day constraints */}
+        {/* Primary metadata row */}
         <div className="flex items-center flex-wrap" style={{ gap: 6, marginTop: 8 }}>
           {/* Duration pill */}
           <span
@@ -116,23 +110,25 @@ export function KanbanCard({ card, isOverlay }: Props) {
             </span>
           )}
 
-          {/* Priority badge */}
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: pri.color,
-              backgroundColor: pri.bg,
-              padding: '2px 7px',
-              borderRadius: 4,
-              letterSpacing: 0.2,
-            }}
-          >
-            {pri.label}
-          </span>
+          {/* Category tag */}
+          {category && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: category.color,
+                backgroundColor: category.color + '1f',
+                padding: '2px 7px',
+                borderRadius: 4,
+                letterSpacing: 0.2,
+              }}
+            >
+              {category.name}
+            </span>
+          )}
         </div>
 
-        {/* Secondary metadata — date, smaller and muted */}
+        {/* Secondary metadata — date */}
         {card.startDate && (
           <div
             style={{

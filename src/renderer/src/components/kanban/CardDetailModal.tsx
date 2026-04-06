@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import { formatDuration } from '@/lib/dateUtils'
-import type { DayOfWeek, Priority } from '@/types'
+import type { DayOfWeek } from '@/types'
 
 const DAYS: { label: string; value: DayOfWeek }[] = [
   { label: 'Mon', value: 'mon' },
@@ -11,12 +11,6 @@ const DAYS: { label: string; value: DayOfWeek }[] = [
   { label: 'Fri', value: 'fri' },
   { label: 'Sat', value: 'sat' },
   { label: 'Sun', value: 'sun' },
-]
-
-const PRIORITIES: { label: string; value: Priority; color: string }[] = [
-  { label: 'Low', value: 'low', color: '#4ade80' },
-  { label: 'Medium', value: 'medium', color: '#fbbf24' },
-  { label: 'High', value: 'high', color: '#f87171' },
 ]
 
 const DURATION_PRESETS = [
@@ -34,6 +28,7 @@ interface Props {
 export function CardDetailModal({ cardId, onClose }: Props) {
   const card = useAppStore((s) => s.cards.find((c) => c.id === cardId))
   const lists = useAppStore((s) => s.lists)
+  const categories = useAppStore((s) => s.categories)
   const timeBlocks = useAppStore((s) => s.timeBlocks)
   const updateCard = useAppStore((s) => s.updateCard)
   const deleteCard = useAppStore((s) => s.deleteCard)
@@ -42,7 +37,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState('')
   const [durationMinutes, setDurationMinutes] = useState(60)
-  const [priority, setPriority] = useState<Priority>('medium')
+  const [categoryId, setCategoryId] = useState<string | null>(null)
   const [allowedDays, setAllowedDays] = useState<DayOfWeek[]>([])
   const [selectedTimeBlockIds, setSelectedTimeBlockIds] = useState<string[]>([])
 
@@ -52,7 +47,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
       setDescription(card.description)
       setStartDate(card.startDate ? card.startDate.slice(0, 16) : '')
       setDurationMinutes(card.durationMinutes)
-      setPriority(card.priority)
+      setCategoryId(card.categoryId)
       setAllowedDays([...card.allowedDays])
       setSelectedTimeBlockIds([...card.timeBlockIds])
     }
@@ -68,7 +63,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
       description,
       startDate: startDate ? new Date(startDate).toISOString() : null,
       durationMinutes: Math.max(5, durationMinutes),
-      priority,
+      categoryId,
       allowedDays,
       timeBlockIds: selectedTimeBlockIds,
     })
@@ -137,7 +132,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             style={{ fontSize: 20, marginTop: 12 }}
           />
 
-          {/* Description — 8px below title */}
+          {/* Description */}
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -153,32 +148,32 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             Scheduling
           </p>
 
-          {/* Priority — 16px below section label */}
+          {/* Category dropdown */}
           <div style={{ marginTop: 16 }}>
             <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
-              Priority
+              Category
             </label>
-            <div className="flex" style={{ gap: 8 }}>
-              {PRIORITIES.map((p) => (
-                <button
-                  key={p.value}
-                  onClick={() => setPriority(p.value)}
-                  className="rounded-lg border transition-colors"
-                  style={{
-                    padding: '7px 16px',
-                    fontSize: 12,
-                    ...(priority === p.value
-                      ? { backgroundColor: p.color + '25', borderColor: p.color, color: p.color }
-                      : { borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }),
-                  }}
-                >
-                  {p.label}
-                </button>
+            <select
+              value={categoryId ?? ''}
+              onChange={(e) => setCategoryId(e.target.value || null)}
+              className="w-full bg-[var(--color-bg)] text-[var(--color-text)] rounded-xl border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)] [color-scheme:dark]"
+              style={{ fontSize: 13, padding: '8px 12px' }}
+            >
+              <option value="">None</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
               ))}
-            </div>
+            </select>
+            {categories.length === 0 && (
+              <p className="text-[var(--color-text-muted)] leading-relaxed" style={{ fontSize: 11, marginTop: 4 }}>
+                No categories yet. Use <strong className="text-[var(--color-text-secondary)]">Categories</strong> in the toolbar to create them.
+              </p>
+            )}
           </div>
 
-          {/* Date & Duration — 16px below priority */}
+          {/* Date & Duration */}
           <div className="grid grid-cols-2" style={{ gap: 16, marginTop: 16 }}>
             <div>
               <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
@@ -238,7 +233,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             Constraints
           </p>
 
-          {/* Allowed Days — 16px below section label */}
+          {/* Allowed Days */}
           <div style={{ marginTop: 16 }}>
             <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
               Schedule only on
@@ -266,7 +261,7 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             )}
           </div>
 
-          {/* Time Blocks — 16px below days */}
+          {/* Time Blocks */}
           <div style={{ marginTop: 16 }}>
             <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
               Schedule during
