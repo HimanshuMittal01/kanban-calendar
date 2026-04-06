@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
-import type { Card, Category, KanbanList, TimeBlock, TimeFilterRange, GridInterval } from '@/types'
+import type { ActionType, Card, Person, KanbanList, TimeBlock, TimeFilterRange, GridInterval } from '@/types'
 import { DEFAULT_LISTS, LIST_COLORS } from '@/lib/constants'
 
 // File-based storage via Electron IPC (synchronous read, async write)
@@ -31,7 +31,7 @@ export interface AppState {
   lists: KanbanList[]
   cards: Card[]
   timeBlocks: TimeBlock[]
-  categories: Category[]
+  people: Person[]
 
   // UI State
   activeFilter: TimeFilterRange | null
@@ -50,10 +50,10 @@ export interface AppState {
   deleteCard: (id: string) => void
   moveCard: (cardId: string, toListId: string, newIndex: number) => void
 
-  // Category CRUD
-  addCategory: (name: string, color: string) => void
-  updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void
-  deleteCategory: (id: string) => void
+  // Person CRUD
+  addPerson: (name: string, color: string) => void
+  updatePerson: (id: string, updates: Partial<Omit<Person, 'id'>>) => void
+  deletePerson: (id: string) => void
 
   // Time Block CRUD
   addTimeBlock: (block: Omit<TimeBlock, 'id'>) => void
@@ -82,7 +82,7 @@ export const useAppStore = create<AppState>()(
       lists: createDefaultLists(),
       cards: [],
       timeBlocks: [],
-      categories: [],
+      people: [],
 
       // UI state
       activeFilter: null,
@@ -135,7 +135,8 @@ export const useAppStore = create<AppState>()(
           listId,
           startDate: null,
           durationMinutes: null,
-          categoryId: null,
+          personId: null,
+          actionType: 'Work',
           allowedDays: [],
           timeBlockIds: [],
           createdAt: now,
@@ -205,23 +206,24 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      // Category CRUD
-      addCategory: (name, color) => {
-        const newCategory: Category = { id: nanoid(), name, color }
-        set({ categories: [...get().categories, newCategory] })
+      // Person CRUD
+      addPerson: (name, color) => {
+        const newPerson: Person = { id: nanoid(), name, color }
+        set({ people: [...get().people, newPerson] })
       },
 
-      updateCategory: (id, updates) => {
+      updatePerson: (id, updates) => {
         set({
-          categories: get().categories.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+          people: get().people.map((p) => (p.id === id ? { ...p, ...updates } : p)),
         })
       },
 
-      deleteCategory: (id) => {
+      deletePerson: (id) => {
         set({
-          categories: get().categories.filter((c) => c.id !== id),
+          people: get().people.filter((p) => p.id !== id),
+          // Cards that lose their person revert to Work (Follow up without a person is invalid)
           cards: get().cards.map((c) =>
-            c.categoryId === id ? { ...c, categoryId: null } : c
+            c.personId === id ? { ...c, personId: null, actionType: 'Work' as ActionType } : c
           ),
         })
       },
@@ -255,12 +257,14 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'kanban-calendar-storage',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => fileStorage),
       migrate: (persistedState: unknown, version: number) => {
-        const state = persistedState as Record<string, unknown>
-        if (version === 1) {
-          return {
+        let state = persistedState as Record<string, unknown>
+
+        // v1 → v2: removed priority, added categoryId
+        if (version <= 1) {
+          state = {
             ...state,
             categories: [],
             cards: ((state.cards ?? []) as Record<string, unknown>[]).map(
@@ -268,6 +272,26 @@ export const useAppStore = create<AppState>()(
             ),
           }
         }
+
+        // v2 → v3: categories→people, categoryId→personId, add actionType
+        if (version <= 2) {
+          const oldCategories = (state.categories ?? []) as Record<string, unknown>[]
+          state = {
+            ...state,
+            people: oldCategories.map(({ id, name, color }) => ({ id, name, color })),
+            categories: undefined,
+            cards: ((state.cards ?? []) as Record<string, unknown>[]).map((card) => {
+              const categoryId = card.categoryId as string | null
+              return {
+                ...card,
+                personId: categoryId ?? null,
+                actionType: categoryId ? 'Follow up' : 'Work',
+                categoryId: undefined,
+              }
+            }),
+          }
+        }
+
         return state
       },
     }
