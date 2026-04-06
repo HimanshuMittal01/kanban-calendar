@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import { formatDuration } from '@/lib/dateUtils'
-import type { DayOfWeek } from '@/types'
+import type { ActionType, DayOfWeek } from '@/types'
 
 const DAYS: { label: string; value: DayOfWeek }[] = [
   { label: 'Mon', value: 'mon' },
@@ -28,7 +28,7 @@ interface Props {
 export function CardDetailModal({ cardId, onClose }: Props) {
   const card = useAppStore((s) => s.cards.find((c) => c.id === cardId))
   const lists = useAppStore((s) => s.lists)
-  const categories = useAppStore((s) => s.categories)
+  const people = useAppStore((s) => s.people)
   const timeBlocks = useAppStore((s) => s.timeBlocks)
   const updateCard = useAppStore((s) => s.updateCard)
   const deleteCard = useAppStore((s) => s.deleteCard)
@@ -37,7 +37,8 @@ export function CardDetailModal({ cardId, onClose }: Props) {
   const [description, setDescription] = useState('')
   const [startDate, setStartDate] = useState('')
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null)
-  const [categoryId, setCategoryId] = useState<string | null>(null)
+  const [personId, setPersonId] = useState<string | null>(null)
+  const [actionType, setActionType] = useState<ActionType>('Work')
   const [allowedDays, setAllowedDays] = useState<DayOfWeek[]>([])
   const [selectedTimeBlockIds, setSelectedTimeBlockIds] = useState<string[]>([])
 
@@ -47,7 +48,8 @@ export function CardDetailModal({ cardId, onClose }: Props) {
       setDescription(card.description)
       setStartDate(card.startDate ? card.startDate.slice(0, 16) : '')
       setDurationMinutes(card.durationMinutes ?? null)
-      setCategoryId(card.categoryId)
+      setPersonId(card.personId)
+      setActionType(card.actionType)
       setAllowedDays([...card.allowedDays])
       setSelectedTimeBlockIds([...card.timeBlockIds])
     }
@@ -57,13 +59,20 @@ export function CardDetailModal({ cardId, onClose }: Props) {
 
   const currentList = lists.find((l) => l.id === card.listId)
 
+  function handleActionTypeChange(type: ActionType) {
+    setActionType(type)
+    // Work cards cannot have a person
+    if (type === 'Work') setPersonId(null)
+  }
+
   function handleSave() {
     updateCard(cardId, {
       title: title.trim() || 'Untitled',
       description,
       startDate: startDate ? new Date(startDate).toISOString() : null,
       durationMinutes: durationMinutes !== null ? Math.max(5, durationMinutes) : null,
-      categoryId,
+      personId: actionType === 'Follow up' ? personId : null,
+      actionType,
       allowedDays,
       timeBlockIds: selectedTimeBlockIds,
     })
@@ -142,36 +151,61 @@ export function CardDetailModal({ cardId, onClose }: Props) {
             style={{ fontSize: 13, padding: '10px 14px', marginTop: 8 }}
           />
 
+          {/* ── Action type section ── */}
+          <div className="border-t border-[var(--color-border)]" style={{ marginTop: 20 }} />
+          <p className="font-semibold text-[var(--color-text-secondary)]" style={{ fontSize: 11, marginTop: 16 }}>
+            Action type
+          </p>
+
+          <div className="flex" style={{ gap: 6, marginTop: 10 }}>
+            {(['Work', 'Follow up'] as ActionType[]).map((type) => (
+              <button
+                key={type}
+                onClick={() => handleActionTypeChange(type)}
+                className={`rounded-lg border transition-colors ${
+                  actionType === type
+                    ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
+                    : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text-secondary)]'
+                }`}
+                style={{ padding: '6px 16px', fontSize: 12 }}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          {/* Person dropdown — only for Follow up */}
+          {actionType === 'Follow up' && (
+            <div style={{ marginTop: 14 }}>
+              <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
+                Person
+              </label>
+              <select
+                value={personId ?? ''}
+                onChange={(e) => setPersonId(e.target.value || null)}
+                className="w-full bg-[var(--color-bg)] text-[var(--color-text)] rounded-xl border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)] [color-scheme:dark]"
+                style={{ fontSize: 13, padding: '8px 12px' }}
+              >
+                <option value="">None</option>
+                {people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              {people.length === 0 && (
+                <p className="text-[var(--color-text-muted)] leading-relaxed" style={{ fontSize: 11, marginTop: 4 }}>
+                  No people yet. Use <strong className="text-[var(--color-text-secondary)]">People</strong> in the toolbar to add them.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* ── Scheduling section ── */}
           <div className="border-t border-[var(--color-border)]" style={{ marginTop: 20 }} />
           <p className="font-semibold text-[var(--color-text-secondary)]" style={{ fontSize: 11, marginTop: 16 }}>
             Scheduling
           </p>
-
-          {/* Category dropdown */}
-          <div style={{ marginTop: 16 }}>
-            <label className="block text-[var(--color-text-muted)]" style={{ fontSize: 11, marginBottom: 6 }}>
-              Category
-            </label>
-            <select
-              value={categoryId ?? ''}
-              onChange={(e) => setCategoryId(e.target.value || null)}
-              className="w-full bg-[var(--color-bg)] text-[var(--color-text)] rounded-xl border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)] [color-scheme:dark]"
-              style={{ fontSize: 13, padding: '8px 12px' }}
-            >
-              <option value="">None</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            {categories.length === 0 && (
-              <p className="text-[var(--color-text-muted)] leading-relaxed" style={{ fontSize: 11, marginTop: 4 }}>
-                No categories yet. Use <strong className="text-[var(--color-text-secondary)]">Categories</strong> in the toolbar to create them.
-              </p>
-            )}
-          </div>
 
           {/* Date & Duration */}
           <div className="grid grid-cols-2" style={{ gap: 16, marginTop: 16 }}>
