@@ -1,28 +1,28 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store'
-import { CATEGORY_COLORS } from '@/lib/constants'
+import { PERSON_COLORS } from '@/lib/constants'
 
-export function CategoryManager({ onClose }: { onClose: () => void }) {
-  const categories = useAppStore((s) => s.categories)
-  const addCategory = useAppStore((s) => s.addCategory)
-  const deleteCategory = useAppStore((s) => s.deleteCategory)
+export function PeopleManager({ onClose }: { onClose: () => void }) {
+  const people = useAppStore((s) => s.people)
+  const addPerson = useAppStore((s) => s.addPerson)
+  const deletePerson = useAppStore((s) => s.deletePerson)
 
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
-  const [color, setColor] = useState(CATEGORY_COLORS[0])
+  const [color, setColor] = useState(PERSON_COLORS[0])
 
   function handleAdd() {
     if (name.trim()) {
-      addCategory(name.trim(), color)
+      addPerson(name.trim(), color)
       setName('')
-      setColor(CATEGORY_COLORS[(categories.length + 1) % CATEGORY_COLORS.length])
+      setColor(PERSON_COLORS[(people.length + 1) % PERSON_COLORS.length])
       setAdding(false)
     }
   }
 
   function handleCancel() {
     setName('')
-    setColor(CATEGORY_COLORS[0])
+    setColor(PERSON_COLORS[0])
     setAdding(false)
   }
 
@@ -45,7 +45,7 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
           className="flex items-center justify-between shrink-0"
           style={{ padding: '18px 20px 14px' }}
         >
-          <span className="text-sm font-semibold text-[var(--color-text)]">Categories</span>
+          <span className="text-sm font-semibold text-[var(--color-text)]">People</span>
           <button
             onClick={onClose}
             className="flex items-center justify-center rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)] transition-colors"
@@ -55,37 +55,37 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* Category list */}
+        {/* People list */}
         <div className="overflow-y-auto min-h-0" style={{ padding: '0 20px' }}>
-          {categories.length === 0 && !adding && (
+          {people.length === 0 && !adding && (
             <p
               className="text-center text-[var(--color-text-muted)]"
               style={{ fontSize: 12, padding: '24px 0 20px' }}
             >
-              No categories yet
+              No people yet
             </p>
           )}
 
-          {categories.length > 0 && (
+          {people.length > 0 && (
             <div style={{ paddingBottom: 8 }}>
-              {categories.map((cat) => (
+              {people.map((person) => (
                 <div
-                  key={cat.id}
+                  key={person.id}
                   className="group flex items-center"
                   style={{ height: 36, gap: 10 }}
                 >
                   <div
                     className="rounded-full shrink-0"
-                    style={{ width: 8, height: 8, backgroundColor: cat.color }}
+                    style={{ width: 8, height: 8, backgroundColor: person.color }}
                   />
                   <span
                     className="flex-1 text-[var(--color-text)]"
                     style={{ fontSize: 13 }}
                   >
-                    {cat.name}
+                    {person.name}
                   </span>
                   <button
-                    onClick={() => deleteCategory(cat.id)}
+                    onClick={() => deletePerson(person.id)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-text-muted)] hover:text-red-400"
                     style={{ fontSize: 16, lineHeight: 1, padding: '2px 4px' }}
                     title="Remove"
@@ -112,14 +112,14 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
                 if (e.key === 'Enter') handleAdd()
                 if (e.key === 'Escape') handleCancel()
               }}
-              placeholder="Category name"
+              placeholder="Person name"
               className="w-full bg-transparent text-[var(--color-text)] outline-none"
               style={{ fontSize: 13, marginBottom: 12 }}
             />
 
             {/* Color picker */}
             <div className="flex items-center" style={{ gap: 6, marginBottom: 14 }}>
-              {CATEGORY_COLORS.map((c) => (
+              {PERSON_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
@@ -164,7 +164,7 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
               className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
               style={{ fontSize: 12 }}
             >
-              + New category
+              + New person
             </button>
           </div>
         )}
