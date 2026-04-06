@@ -1,7 +1,13 @@
 import { useAppStore } from '@/store'
 import type { GridInterval } from '@/types'
 
-export function Toolbar({ onOpenTimeBlocks }: { onOpenTimeBlocks: () => void }) {
+export function Toolbar({
+  onOpenTimeBlocks,
+  onOpenCategories,
+}: {
+  onOpenTimeBlocks: () => void
+  onOpenCategories: () => void
+}) {
   const activeFilter = useAppStore((s) => s.activeFilter)
   const gridInterval = useAppStore((s) => s.gridInterval)
   const setGridInterval = useAppStore((s) => s.setGridInterval)
@@ -25,6 +31,14 @@ export function Toolbar({ onOpenTimeBlocks }: { onOpenTimeBlocks: () => void }) 
           ))}
         </div>
       )}
+
+      <button
+        onClick={onOpenCategories}
+        className="px-4 text-xs font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 rounded-lg transition-colors border border-[var(--color-accent)]/25 shrink-0"
+        style={{ height: 32 }}
+      >
+        Categories
+      </button>
 
       <button
         onClick={onOpenTimeBlocks}
