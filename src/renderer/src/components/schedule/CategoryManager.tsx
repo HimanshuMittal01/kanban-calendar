@@ -20,107 +20,154 @@ export function CategoryManager({ onClose }: { onClose: () => void }) {
     }
   }
 
+  function handleCancel() {
+    setName('')
+    setColor(CATEGORY_COLORS[0])
+    setAdding(false)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      <div className="relative bg-[var(--color-surface-elevated)] rounded-2xl shadow-2xl w-[400px] max-h-[80vh] overflow-y-auto border border-[var(--color-border)]">
+      <div
+        className="relative flex flex-col border border-[var(--color-border)]"
+        style={{
+          backgroundColor: 'var(--color-surface-elevated)',
+          borderRadius: 16,
+          width: 360,
+          maxHeight: '70vh',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+        }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-sm font-semibold text-[var(--color-text)]">Categories</h2>
+        <div
+          className="flex items-center justify-between shrink-0"
+          style={{ padding: '18px 20px 14px' }}
+        >
+          <span className="text-sm font-semibold text-[var(--color-text)]">Categories</span>
           <button
             onClick={onClose}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-lg"
+            className="flex items-center justify-center rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            style={{ width: 26, height: 26, fontSize: 16 }}
           >
             &times;
           </button>
         </div>
 
-        <div className="px-6 py-4 space-y-3">
+        {/* Category list */}
+        <div className="overflow-y-auto min-h-0" style={{ padding: '0 20px' }}>
           {categories.length === 0 && !adding && (
-            <p className="text-sm text-[var(--color-text-muted)] text-center py-6">
-              No categories yet.
-              <br />
-              Create categories like "Design" or "Backend" to tag cards.
+            <p
+              className="text-center text-[var(--color-text-muted)]"
+              style={{ fontSize: 12, padding: '24px 0 20px' }}
+            >
+              No categories yet
             </p>
           )}
 
-          {/* Existing categories */}
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="bg-[var(--color-bg)] rounded-lg px-3 py-2.5 border border-[var(--color-border)] flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2">
+          {categories.length > 0 && (
+            <div style={{ paddingBottom: 8 }}>
+              {categories.map((cat) => (
                 <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="text-sm font-medium text-[var(--color-text)]">{cat.name}</span>
-              </div>
-              <button
-                onClick={() => deleteCategory(cat.id)}
-                className="text-xs text-red-400 hover:text-red-300"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-
-          {/* Add form */}
-          {adding ? (
-            <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-accent)]/30 space-y-3">
-              <input
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                placeholder="Category name (e.g., Design)"
-                className="w-full bg-[var(--color-surface)] text-sm text-[var(--color-text)] px-3 py-2 rounded-lg border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]"
-              />
-              <div>
-                <label className="text-[10px] text-[var(--color-text-muted)] mb-1 block">
-                  Color
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {CATEGORY_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setColor(c)}
-                      className={`w-6 h-6 rounded-full border-2 transition-transform ${
-                        color === c
-                          ? 'border-white scale-110'
-                          : 'border-transparent hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
+                  key={cat.id}
+                  className="group flex items-center"
+                  style={{ height: 36, gap: 10 }}
+                >
+                  <div
+                    className="rounded-full shrink-0"
+                    style={{ width: 8, height: 8, backgroundColor: cat.color }}
+                  />
+                  <span
+                    className="flex-1 text-[var(--color-text)]"
+                    style={{ fontSize: 13 }}
+                  >
+                    {cat.name}
+                  </span>
+                  <button
+                    onClick={() => deleteCategory(cat.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-text-muted)] hover:text-red-400"
+                    style={{ fontSize: 16, lineHeight: 1, padding: '2px 4px' }}
+                    title="Remove"
+                  >
+                    ×
+                  </button>
                 </div>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={handleAdd}
-                  className="px-4 py-1.5 text-xs bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)]"
-                >
-                  Add Category
-                </button>
-                <button
-                  onClick={() => setAdding(false)}
-                  className="px-4 py-1.5 text-xs text-[var(--color-text-secondary)]"
-                >
-                  Cancel
-                </button>
-              </div>
+              ))}
             </div>
-          ) : (
-            <button
-              onClick={() => setAdding(true)}
-              className="w-full py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] bg-[var(--color-bg)] hover:bg-[var(--color-surface)] rounded-lg border border-dashed border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors"
-            >
-              + Add Category
-            </button>
           )}
         </div>
+
+        {/* Add form */}
+        {adding ? (
+          <div
+            className="shrink-0 border-t border-[var(--color-border)]"
+            style={{ padding: '14px 20px 18px' }}
+          >
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAdd()
+                if (e.key === 'Escape') handleCancel()
+              }}
+              placeholder="Category name"
+              className="w-full bg-transparent text-[var(--color-text)] outline-none"
+              style={{ fontSize: 13, marginBottom: 12 }}
+            />
+
+            {/* Color picker */}
+            <div className="flex items-center" style={{ gap: 6, marginBottom: 14 }}>
+              {CATEGORY_COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className="transition-transform"
+                  style={{
+                    width: color === c ? 18 : 14,
+                    height: color === c ? 18 : 14,
+                    borderRadius: '50%',
+                    backgroundColor: c,
+                    outline: color === c ? `2px solid ${c}` : 'none',
+                    outlineOffset: 2,
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center" style={{ gap: 8 }}>
+              <button
+                onClick={handleAdd}
+                className="bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
+                style={{ padding: '6px 14px', fontSize: 12 }}
+              >
+                Add
+              </button>
+              <button
+                onClick={handleCancel}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                style={{ fontSize: 12 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="shrink-0 border-t border-[var(--color-border)]"
+            style={{ padding: '12px 20px' }}
+          >
+            <button
+              onClick={() => setAdding(true)}
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              style={{ fontSize: 12 }}
+            >
+              + New category
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
