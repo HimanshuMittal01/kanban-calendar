@@ -1,10 +1,14 @@
-export type Priority = 'low' | 'medium' | 'high'
-
 export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
 
 export type TimeFilterRange = 'today' | 'this-week' | 'next-week'
 
 export type GridInterval = 15 | 30
+
+export interface Category {
+  id: string
+  name: string
+  color: string // hex
+}
 
 export interface TimeBlock {
   id: string
@@ -23,7 +27,7 @@ export interface Card {
 
   startDate: string | null // ISO 8601
   durationMinutes: number
-  priority: Priority
+  categoryId: string | null
 
   allowedDays: DayOfWeek[]
   timeBlockIds: string[]
